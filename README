@@ -1,0 +1,21 @@
+This is a loose collection of scripts and a daemon for visualizing clusto
+databases in interesting ways.
+
+viz.py listens on port 9660
+
+Rack visualization
+http://localhost:9660/
+
+Pool utilization over time
+http://localhost:9660/pool/unallocated
+
+update.py should be setup on a cron at a fairly regular interval (every five
+or ten minutes) to gather data from clusto and dump it to pools.db (sqlite)
+and result.json, to be read by viz.py
+
+Creating pools.db:
+echo "CREATE TABLE counts (
+id integer primary key,
+name text,
+ts int,
+count int);" | sqlite3 pools.db
