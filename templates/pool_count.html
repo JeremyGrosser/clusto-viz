@@ -1,0 +1,33 @@
+<html>
+<head>
+	<title>{{ pool }}</title>
+	<style type="text/css">
+#graph {
+	margin: 0 auto;
+	width: 80%;
+	height: 80%;
+}
+	</style>
+	<script type="text/javascript" src="http://lmgmt.digg.internal/~synack/js/flot/jquery.js"></script>
+	<script type="text/javascript" src="http://lmgmt.digg.internal/~synack/js/flot/jquery.flot.js"></script>
+	<script type="text/javascript">
+$(document).ready(function() {
+	$.plot($('#graph'), [{{ counts }}], {
+		xaxis: {
+			mode: "time",
+			timeformat: "%m/%d/%y %H:%M"
+		},
+		yaxis: {
+			tickDecimals: 0
+		}
+	});
+});
+	</script>
+</head>
+
+<body>
+
+<div id="graph"></div>
+
+</body>
+</html>

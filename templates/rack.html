@@ -1,0 +1,216 @@
+<html>
+<head>
+	<title>Rack visualization</title>
+	<style type="text/css">
+body {
+	margin: 0;
+	padding: 0;
+	font-size: 8pt;
+	font-family: sans-serif;
+}
+
+#header {
+}
+
+#search {
+	float: left;
+	padding: 10px;
+	line-height: 20px;
+}
+
+#search input {
+	border: 1px solid black;
+	margin-left: 5px;
+	padding: 2px;
+}
+
+#complete {
+	float: left;
+	padding: 10px;
+	line-height: 23px;
+}
+
+#count {
+	text-align: right;
+	clear: both;
+	width: 100%;
+}
+
+#count_highlight {
+	color: #090;
+}
+
+#count_rma {
+	color: #900;
+}
+
+#lastupdated {
+	float: right;
+	padding: 10px;
+	line-height: 15px;
+}
+
+.ru {
+	border-top: 1px solid #BBB;
+	width: 96%;
+	clear: both;
+	padding-left: 2%;
+	padding-right: 2%;
+}
+
+.rack {
+	float: left;
+	margin: 5px;
+	width: 125px;
+	border-bottom: 1px solid #000;
+	border-left: 1px solid #000;
+	border-right: 1px solid #000;
+}
+
+.rackname, .datacentername {
+	clear: both;
+	width: 100%;
+	line-height: 2em;
+	background-color: #000;
+	color: #FFF;
+	text-align: center;
+}
+
+.datacentername {
+	background-color: #449;
+	font-size: 10pt;
+	font-weight: bold;
+}
+
+.empty {
+	background-color: #DDD;
+}
+
+.networkswitch, .powerstrip, .consoleserver, .server {
+	background-color: #CCF;
+}
+
+.runumber {
+	display: inline;
+	color: #666;
+}
+
+.devicename {
+	float: right;
+	display: inline;
+}
+
+.rma {
+	background-color: #FC7;
+}
+	</style>
+	<script type="text/javascript" src="http://debian2.digg.internal/repoman/ui/js/jquery.js"></script>
+	<script type="text/javascript" src="http://lmgmt.digg.internal/~synack/jquery.scrollTo-min.js"></script>
+	<script type="text/javascript">
+keywords = ["networkswitch", "powerstrip", "consoleserver", "server", {% for k in keywords %}"{{ k }}",{% endfor %}];
+last_highlight = null;
+
+function highlight_class(name) {
+	if(last_highlight == name) {
+		return;
+	}else{
+		last_highlight = name;
+	}
+	document.location.hash = '#' + name;
+	$('.ru').css('background-color', '#CCF');
+	$('.empty').css('background-color', '#DDD');
+	rma = $('.rma').css('background-color', '#FC7').length;
+	count = $('.' + name).css('background-color', '#AFA').length;
+	$('#count_highlight').html(count + ' devices highlighted');
+	$('#count_rma').html(rma + ' RMA devices');
+}
+
+function update_rma() {
+	$('#count_rma').html($('.rma').length + ' RMA devices');
+}
+
+$(document).ready(function() {
+	hash = document.location.hash.replace(/^#/, '');
+	if(hash) {
+		$('#search input').val(hash);
+		highlight_class(hash);
+	}else{
+		update_rma();
+	}
+
+	$('#search input').keypress(function(evt) {
+		value = $('#search input').val();
+		$('#complete').html('');
+		possible = [];
+		for(i = 0; i < keywords.length; i++) {
+			if(keywords[i] == value) {
+				possible = [value];
+				break;
+			}
+			if(keywords[i].indexOf(value) != -1) {
+				possible.push(keywords[i]);
+				$('#complete').append('<a href="#' + keywords[i] + '">' + keywords[i] + '</a> ');
+			}
+			if(possible.length > 4) {
+				$('#complete').append('...');
+				break;
+			}
+		}
+		$('#complete a').click(function(evt) {
+			hash = evt.currentTarget.hash.replace(/^#/, '');
+			highlight_class(hash);
+			$('#search input').val(hash);
+		});
+		if(possible.length == 1) {
+			highlight_class(possible[0]);
+		}
+	});
+
+	$('.ru').click(function(evt) {
+		console.log($(evt.target).children('.devicename').html());
+	});
+	$('#search input').focus();
+});
+	</script>
+</head>
+
+<body>
+
+<div id="header">
+	<div id="search"><label for="search">Highlight:</label><input type="text" name="search" /></div>
+	<div id="complete"></div>
+	<div id="lastupdated">
+		Last updated: {{ last_updated }}
+		<div id="count">
+			<div id="count_rma"></div>
+			<div id="count_highlight"></div>
+		</div>
+	</div>
+</div>
+
+{% for datacenter, racks in result %}
+<div class="datacenter">
+	<div class="datacentername">{{ datacenter }}</div>
+	{% for rack, contents in racks %}
+	<div class="rack">
+		<div class="rackname">{{ rack }}</div>
+		{% for ru, device, devicetype, pools in contents %}
+			{% if device %}
+			<div class="ru {{ devicetype }} {{ pools }}">
+				<div class="runumber">{{ ru }}</div>
+				<div class="devicename">{{ device }}</div>
+			</div>
+			{% else %}
+			<div class="ru empty">
+				<div class="runumber">{{ ru }}</div>
+			</div>
+			{% endif %}
+		{% endfor %}
+	</div>
+	{% endfor %}
+</div>
+<br />
+{% endfor %}
+
+</body>
+</html>
